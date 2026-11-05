@@ -1,0 +1,28 @@
+name: Front-adapted IPM global nonlinear validation
+on:
+  push:
+    branches:
+      - validation/2026-11-05-adaptive
+  workflow_dispatch:
+jobs:
+  adaptive-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install numerical packages
+        run: python -m pip install --disable-pip-version-check numpy scipy numba
+      - name: Solve IPM using front-adapted radial mesh
+        run: |
+          export OPENBLAS_NUM_THREADS=1
+          export OMP_NUM_THREADS=1
+          python -u validation/adaptive_global_ipm.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: adaptive-global-ipm-results
+          path: validation/adaptive_results.json
+          if-no-files-found: warn
