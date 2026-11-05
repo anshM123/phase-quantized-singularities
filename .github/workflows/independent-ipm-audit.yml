@@ -1,0 +1,30 @@
+name: Independent IPM released-state audit
+on:
+  push:
+    branches:
+      - validation/2026-11-05-independent-audit
+  workflow_dispatch:
+
+jobs:
+  released-state-residuals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install numerical requirements
+        run: python -m pip install --disable-pip-version-check numpy scipy numba
+      - name: Independently differentiate released IPM states
+        shell: bash
+        run: |
+          export OPENBLAS_NUM_THREADS=1
+          export OMP_NUM_THREADS=1
+          python validation/independent_profile_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-profile-audit-results
+          path: validation/independent_profile_audit_results.json
+          if-no-files-found: warn
