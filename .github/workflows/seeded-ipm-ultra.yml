@@ -1,0 +1,30 @@
+name: Ultra mesh seeded IPM global validation
+on:
+  push:
+    branches:
+      - validation/2026-11-05-ultra
+  workflow_dispatch:
+jobs:
+  ultra-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install packages
+        run: python -m pip install --disable-pip-version-check numpy scipy numba
+      - name: Independently solve deep IPM states on tighter grids
+        run: |
+          export OPENBLAS_NUM_THREADS=1
+          export OMP_NUM_THREADS=1
+          python -u validation/seeded_global_ultra.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ultra-ipm-global-results
+          path: |
+            validation/ultra_results.json
+            validation/ultra_*.npz
+          if-no-files-found: warn
