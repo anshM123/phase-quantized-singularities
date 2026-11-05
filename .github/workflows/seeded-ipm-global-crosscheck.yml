@@ -1,0 +1,29 @@
+name: Independent-formulation seeded IPM global crosscheck
+on:
+  push:
+    branches:
+      - validation/2026-11-05-independent-audit
+  workflow_dispatch:
+jobs:
+  seeded-global-crosscheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scientific packages
+        run: python -m pip install --disable-pip-version-check numpy scipy numba
+      - name: Crosscheck saved IPM states with global sparse Newton formulation
+        shell: bash
+        run: |
+          export OPENBLAS_NUM_THREADS=1
+          export OMP_NUM_THREADS=1
+          python -u validation/seeded_global_crosscheck.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seeded-global-crosscheck-results
+          path: validation/seeded_global_crosscheck_results.json
+          if-no-files-found: warn
